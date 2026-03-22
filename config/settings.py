@@ -114,3 +114,22 @@ EMAIL_SEND_DELAY_MAX = 300   # 5 minutes
 # ---------------------------------------------------------------------------
 # Path to your resume — used by ScoringAgent to score jobs
 RESUME_PATH = "config/resume.md"
+
+
+# ---------------------------------------------------------------------------
+# HELPER
+# ---------------------------------------------------------------------------
+def is_placeholder(value: str) -> bool:
+    """Returns True if a config value is still a placeholder."""
+    if not value or not value.strip():
+        return True
+    placeholders = [
+        "your_key_here", "your_token_here", "your_client_id_here",
+        "your_client_secret_here", "your_project_id_here", "",
+    ]
+    if value.strip().lower() in placeholders:
+        return True
+    # Catch placeholder database URLs
+    if "user:password@host" in value:
+        return True
+    return False
