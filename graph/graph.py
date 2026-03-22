@@ -59,6 +59,7 @@ from agents.funding_intel_agent import funding_intel_agent
 # from agents.scoring_agent import scoring_agent
 from agents.scoring_agent import scoring_agent
 # from agents.contact_finder_agent import contact_finder_agent
+from agents.contact_finder_agent import contact_finder_agent
 # from agents.outreach_agent import outreach_agent
 # from agents.tracker_agent import tracker_agent
 
@@ -78,19 +79,6 @@ from agents.scoring_agent import scoring_agent
 # This is important: you never return the full state from a node.
 # You only return the fields you changed.
 # ---------------------------------------------------------------------------
-
-
-def contact_finder_agent(state: AgentState) -> dict:
-    """
-    STUB — will be replaced by the real ContactFinderAgent.
-    Uses Tavily + Proxycurl + Hunter.io to find hiring manager details.
-    Returns: {"contacts_found": [...]}
-    """
-    print("👤 [ContactFinderAgent] Running... (stub)")
-    return {
-        "pipeline_status": "running",
-        "last_updated": "stub_timestamp"
-    }
 
 
 def outreach_agent(state: AgentState) -> dict:
