@@ -107,3 +107,10 @@ MAX_EMAILS_PER_DAY = 20
 # Randomised between this and EMAIL_SEND_DELAY_MAX
 EMAIL_SEND_DELAY_MIN = 120   # 2 minutes
 EMAIL_SEND_DELAY_MAX = 300   # 5 minutes
+
+
+# ---------------------------------------------------------------------------
+# RESUME
+# ---------------------------------------------------------------------------
+# Path to your resume — used by ScoringAgent to score jobs
+RESUME_PATH = "config/resume.md"
