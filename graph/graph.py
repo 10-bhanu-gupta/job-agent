@@ -63,6 +63,7 @@ from agents.contact_finder_agent import contact_finder_agent
 # from agents.outreach_agent import outreach_agent
 from agents.outreach_agent import outreach_agent
 # from agents.tracker_agent import tracker_agent
+from agents.tracker_agent import tracker_agent
 
 
 # ---------------------------------------------------------------------------
@@ -80,22 +81,6 @@ from agents.outreach_agent import outreach_agent
 # This is important: you never return the full state from a node.
 # You only return the fields you changed.
 # ---------------------------------------------------------------------------
-
-
-def tracker_agent(state: AgentState) -> dict:
-    """
-    STUB — will be replaced by the real TrackerAgent.
-    Writes final state (approved outreach, sent emails, job statuses) to PostgreSQL.
-    Returns: {"pipeline_status": "complete"}
-
-    NOTE: This node runs AFTER the human approves outreach drafts.
-    It resumes the graph from the interrupt checkpoint.
-    """
-    print("📊 [TrackerAgent] Running... (stub)")
-    return {
-        "pipeline_status": "complete",
-        "last_updated": "stub_timestamp"
-    }
 
 
 # ---------------------------------------------------------------------------
