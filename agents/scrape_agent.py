@@ -195,6 +195,11 @@ def scrape_yc_jobs(user_id: str) -> list[Job]:
 
                 text = comment.get("comment_text", "") or ""
 
+                # Skip very short comments — real job postings are detailed
+                # A comment under 200 chars is likely a reply, not a job post
+                if len(text) < 200:
+                    continue
+
                 job = make_job(
                     user_id=user_id,
                     title=keyword,
@@ -340,6 +345,7 @@ def scrape_greenhouse(user_id: str) -> list[Job]:
     # Format is their Greenhouse "board token" — usually their company name
     # Find more at: https://boards.greenhouse.io/{company}
     greenhouse_companies = [
+        # AI-first companies
         "huggingface",
         "cohere",
         "anthropic",
@@ -358,6 +364,26 @@ def scrape_greenhouse(user_id: str) -> list[Job]:
         "observe",
         "cresta",
         "sierra",
+        # Indian AI/tech companies with Greenhouse
+        "sarvam",
+        "krutrim",
+        "yellow-ai",
+        "haptik",
+        "sprinklr",
+        # Global remote-first AI companies
+        "langchain",
+        "weaviate",
+        "pinecone",
+        "chroma",
+        "llamaindex",
+        "vectara",
+        "adept",
+        "cognition",
+        "imbue",
+        "inflection",
+        "runway",
+        "eleven-labs",
+        "synthesia",
     ]
 
     base_url = "https://boards-api.greenhouse.io/v1/boards"
