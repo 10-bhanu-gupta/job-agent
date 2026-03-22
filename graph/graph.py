@@ -53,6 +53,7 @@ from graph.state import AgentState
 
 # NOTE: Once we build each agent, we'll replace these stubs with real imports:
 # from agents.scrape_agent import scrape_agent
+from agents.scrape_agent import scrape_agent
 # from agents.funding_intel_agent import funding_intel_agent
 # from agents.scoring_agent import scoring_agent
 # from agents.contact_finder_agent import contact_finder_agent
@@ -75,18 +76,6 @@ from graph.state import AgentState
 # This is important: you never return the full state from a node.
 # You only return the fields you changed.
 # ---------------------------------------------------------------------------
-
-def scrape_agent(state: AgentState) -> dict:
-    """
-    STUB — will be replaced by the real ScrapeAgent.
-    Discovers job listings from Wellfound, YC Jobs, LinkedIn (via Apify), etc.
-    Returns: {"jobs_found": [...], "pipeline_status": "running"}
-    """
-    print("🔍 [ScrapeAgent] Running... (stub)")
-    return {
-        "pipeline_status": "running",
-        "last_updated": "stub_timestamp"
-    }
 
 
 def funding_intel_agent(state: AgentState) -> dict:
