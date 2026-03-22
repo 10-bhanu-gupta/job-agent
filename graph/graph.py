@@ -56,6 +56,7 @@ from graph.state import AgentState
 from agents.scrape_agent import scrape_agent
 # from agents.funding_intel_agent import funding_intel_agent
 # from agents.scoring_agent import scoring_agent
+from agents.scoring_agent import scoring_agent
 # from agents.contact_finder_agent import contact_finder_agent
 # from agents.outreach_agent import outreach_agent
 # from agents.tracker_agent import tracker_agent
@@ -85,19 +86,6 @@ def funding_intel_agent(state: AgentState) -> dict:
     Returns: {"funded_companies": [...]}
     """
     print("💰 [FundingIntelAgent] Running... (stub)")
-    return {
-        "pipeline_status": "running",
-        "last_updated": "stub_timestamp"
-    }
-
-
-def scoring_agent(state: AgentState) -> dict:
-    """
-    STUB — will be replaced by the real ScoringAgent.
-    Uses Claude API to score each job in jobs_found against your resume.
-    Returns: {"jobs_scored": [...]}
-    """
-    print("🧠 [ScoringAgent] Running... (stub)")
     return {
         "pipeline_status": "running",
         "last_updated": "stub_timestamp"
