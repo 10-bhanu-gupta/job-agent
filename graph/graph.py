@@ -61,6 +61,7 @@ from agents.scoring_agent import scoring_agent
 # from agents.contact_finder_agent import contact_finder_agent
 from agents.contact_finder_agent import contact_finder_agent
 # from agents.outreach_agent import outreach_agent
+from agents.outreach_agent import outreach_agent
 # from agents.tracker_agent import tracker_agent
 
 
@@ -79,22 +80,6 @@ from agents.contact_finder_agent import contact_finder_agent
 # This is important: you never return the full state from a node.
 # You only return the fields you changed.
 # ---------------------------------------------------------------------------
-
-
-def outreach_agent(state: AgentState) -> dict:
-    """
-    STUB — will be replaced by the real OutreachAgent.
-    Uses Claude API to draft personalised cold emails + LinkedIn DMs.
-    Returns: {"outreach_drafts": [...]}
-
-    NOTE: This node sits JUST BEFORE the interrupt checkpoint.
-    The graph will pause after this node runs and wait for human approval.
-    """
-    print("✍️  [OutreachAgent] Running... (stub)")
-    return {
-        "pipeline_status": "paused",
-        "last_updated": "stub_timestamp"
-    }
 
 
 def tracker_agent(state: AgentState) -> dict:
