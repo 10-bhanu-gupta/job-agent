@@ -27,3 +27,7 @@ Thumbs.db
 *.log
 logs/
 *.db
+
+# GMAIL credentials
+config/gmail_credentials.json
+config/gmail_token.json
