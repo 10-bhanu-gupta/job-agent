@@ -167,6 +167,64 @@ def ensure_default_user(db) -> str:
 
     return default_user_id
 
+# ---------------------------------------------------------------------------
+# ------
+# ---------------------------------------------------------------------------
+
+def pre_interrupt_tracker(state: AgentState) -> dict:
+    """
+    Writes jobs, companies, contacts, and pending outreach drafts to DB
+    before the interrupt checkpoint.
+    """
+    print("\n💾 Pre-interrupt save starting...")
+
+    jobs        = state.get("jobs_found", [])
+    scored_jobs = state.get("jobs_scored", [])
+    companies   = state.get("funded_companies", [])
+    contacts    = state.get("contacts_found", [])
+    drafts      = state.get("outreach_drafts", [])
+
+    with get_db() as db:
+        ensure_default_user(db)
+        for job in jobs:
+            try:
+                upsert_job(db, job, scored_jobs)
+            except Exception as e:
+                print(f"  ⚠️  Job write failed: {e}")
+        for company in companies:
+            try:
+                upsert_company(db, company)
+            except Exception as e:
+                print(f"  ⚠️  Company write failed: {e}")
+        for contact in contacts:
+            try:
+                upsert_contact(db, contact)
+            except Exception as e:
+                print(f"  ⚠️  Contact write failed: {e}")
+        # Write outreach drafts as pending_approval
+        # TrackerAgent will update them to approved/rejected after human review
+        for draft in drafts:
+            try:
+                record = OutreachRecord(
+                    id=draft["id"],
+                    user_id=draft["user_id"],
+                    contact_id=draft["contact_id"] or None,
+                    job_id=draft["job_id"] or None,
+                    email_subject=draft["email_subject"],
+                    email_body=draft["email_body"],
+                    linkedin_dm=draft["linkedin_dm"],
+                    status="pending_approval",
+                )
+                db.merge(record)
+            except Exception as e:
+                print(f"  ⚠️  Draft write failed: {e}")
+
+    print(f"  ✅ Pre-interrupt save complete — {len(jobs)} jobs, {len(companies)} companies, {len(contacts)} contacts, {len(drafts)} drafts")
+    return {
+        "pipeline_status": "paused",
+        "last_updated": datetime.now(timezone.utc).isoformat(),
+    }
+
 
 # ---------------------------------------------------------------------------
 # MAIN NODE FUNCTION

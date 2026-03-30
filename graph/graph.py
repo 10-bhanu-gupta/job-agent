@@ -45,6 +45,8 @@ from langgraph.checkpoint.memory import MemorySaver
 
 from graph.state import AgentState
 
+from agents.tracker_agent import tracker_agent, pre_interrupt_tracker
+
 # ---------------------------------------------------------------------------
 # IMPORT AGENTS
 # We import each agent function here. They don't exist yet — we'll build
@@ -123,6 +125,7 @@ def build_graph(checkpointer=None):
     workflow.add_node("scoring", scoring_agent)
     workflow.add_node("contact_finder", contact_finder_agent)
     workflow.add_node("outreach", outreach_agent)
+    workflow.add_node("pre_interrupt_save", pre_interrupt_tracker)
     workflow.add_node("tracker", tracker_agent)
 
     # Step 3 — Wire the edges (execution order)
@@ -132,7 +135,8 @@ def build_graph(checkpointer=None):
     workflow.add_edge("funding_intel", "scoring")
     workflow.add_edge("scoring", "contact_finder")
     workflow.add_edge("contact_finder", "outreach")
-    workflow.add_edge("outreach", "tracker")
+    workflow.add_edge("outreach", "pre_interrupt_save")
+    workflow.add_edge("pre_interrupt_save", "tracker")
     workflow.add_edge("tracker", END)
 
     # Step 4 — Compile the graph
