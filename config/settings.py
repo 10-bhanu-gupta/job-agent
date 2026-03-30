@@ -40,6 +40,7 @@ HUNTER_API_KEY      = os.getenv("HUNTER_API_KEY", "")
 GMAIL_CLIENT_ID     = os.getenv("GMAIL_CLIENT_ID", "")
 GMAIL_CLIENT_SECRET = os.getenv("GMAIL_CLIENT_SECRET", "")
 GMAIL_REDIRECT_URI  = os.getenv("GMAIL_REDIRECT_URI", "http://localhost:8080")
+GMAIL_SENDER_EMAIL = os.getenv("GMAIL_SENDER_EMAIL", "")
 
 # ---------------------------------------------------------------------------
 # DATABASE
