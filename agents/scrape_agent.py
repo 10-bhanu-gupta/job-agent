@@ -477,8 +477,12 @@ def scrape_via_apify(user_id: str, keyword: str) -> list[Job]:
         # Run the LinkedIn Jobs Scraper actor
         # Each actor has a unique ID — this one is maintained by Apify
         run_input = {
-            "queries": [f"{keyword} Bengaluru OR Remote"],
-            "maxResults": MAX_JOBS_PER_SOURCE,
+            "count": 100,
+            "scrapeCompany": true,
+            "splitByLocation": false,
+            "urls": [
+                "https://www.linkedin.com/jobs/search?keywords=Artificial%20Intelligence%20Engineer&location=Bengaluru&geoId=105214831&distance=25&f_E=2%2C3&f_TPR=r604800&position=1&pageNum=0"
+            ],
             "proxy": {
                 "useApifyProxy": True,
                 "apifyProxyGroups": ["RESIDENTIAL"],  # residential IPs = lower ban risk
@@ -548,7 +552,7 @@ def scrape_agent(state: AgentState) -> dict:
 
     # --- Step 2: Apify fallback ---
     # Only invoke Apify if free sources didn't return enough
-    if len(all_jobs) < MIN_JOBS_BEFORE_APIFY:
+    if len(all_jobs) > -1: #< MIN_JOBS_BEFORE_APIFY: #To run always
         print(f"\n  ℹ️  Only {len(all_jobs)} jobs from free sources — invoking Apify fallback")
         for keyword in JOB_SEARCH_KEYWORDS[:2]:  # top 2 keywords only to manage cost
             apify_jobs = scrape_via_apify(user_id, keyword)
