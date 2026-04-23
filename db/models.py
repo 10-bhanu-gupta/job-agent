@@ -153,6 +153,9 @@ class OutreachRecord(Base):
     user_id         = Column(String, ForeignKey("users.id"), nullable=False)
     contact_id      = Column(String, ForeignKey("contacts.id"), nullable=True)
     job_id          = Column(String, nullable=True)
+    company_id      = Column(String, ForeignKey("companies.id"), nullable=True)  # NEW
+    contact_ids     = Column(String, nullable=True)  # NEW — JSON array: '["id1", "id2", "id3"]'
+    resume_file_path = Column(String, nullable=True)  # NEW — path to resume PDF
     email_subject   = Column(String)
     email_body      = Column(Text)
     linkedin_dm     = Column(Text)
