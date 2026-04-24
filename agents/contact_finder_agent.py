@@ -395,6 +395,159 @@ def find_contact_for_company(
 
 
 # ---------------------------------------------------------------------------
+# FIND MULTIPLE CONTACTS FOR ONE COMPANY (NEW)
+# ---------------------------------------------------------------------------
+
+def find_multiple_contacts_for_company(
+    company_name: str,
+    source_url: str,
+    user_id: str,
+    company_id: str,
+    job_id: str = "",
+    max_contacts: int = 4,  # Find up to 4 people per company
+) -> list[Contact]:
+    """
+    Finds multiple diverse contacts at a company (3-5 people with different roles).
+    
+    Instead of returning 1 contact, this searches for different target roles:
+      1. Founder/Co-founder
+      2. CTO/VP Engineering
+      3. Head of AI / AI Lead
+      4. Hiring Manager / Engineering Manager
+      5. (Optional) People Lead / HR
+    
+    WHY MULTIPLE CONTACTS?
+    - Increases chance of reaching someone with decision-making power
+    - Different roles respond to different angles:
+      * Founder: "You're solving X problem, here's how I can help"
+      * CTO: "Your tech stack is X, I have experience with Y"
+      * Hiring Manager: "I'm interested in this role you're hiring for"
+    - Reduces risk if one person ignores your email
+    
+    RETURNS: List of Contact objects (could be 0-4 depending on what's found)
+    """
+    print(f"    🔍 Finding contacts at {company_name} (target: {max_contacts} people)...")
+    
+    contacts = []
+    found_titles = set()  # Track which titles we've already found to avoid duplicates
+    
+    # Try each target title in order, but keep going until we have max_contacts
+    for target_title in TARGET_TITLES:
+        if len(contacts) >= max_contacts:
+            break
+        
+        # Skip if we already found someone with this title
+        if any(target_title.lower() in title.lower() for title in found_titles):
+            continue
+        
+        # Also check if we already have this LinkedIn URL
+        if any(url == c.linkedin_url for c in contacts):
+            continue
+        
+        query = f'"{company_name}" {target_title} site:linkedin.com/in'
+        try:
+            response = tavily.search(
+                query=query,
+                search_depth="basic",
+                max_results=3,  # Try top 3 results
+            )
+            for result in response.get("results", []):
+                if len(contacts) >= max_contacts:
+                    break
+                    
+                url = result.get("url", "")
+                if "linkedin.com/in/" not in url:
+                    continue
+                
+                # Extract name and title from page title
+                page_title = result.get("title", "")
+                extracted_name = ""
+                extracted_title = ""
+                
+                if " - " in page_title:
+                    parts = [p.strip() for p in page_title.split(" - ")]
+                    parts[-1] = parts[-1].replace("| LinkedIn", "").replace("LinkedIn", "").strip()
+                    parts = [p for p in parts if p]
+                    
+                    extracted_name = parts[0].strip()
+                    if len(parts) >= 3:
+                        extracted_title = parts[1].strip()
+                
+                linkedin_url = normalise_linkedin_url(url)
+                name = extracted_name
+                title = extracted_title
+                
+                # Step 2 — Enrich with Proxycurl
+                first_name = ""
+                last_name = ""
+                
+                if linkedin_url and not is_placeholder(PROXYCURL_API_KEY):
+                    profile = fetch_proxycurl_profile(linkedin_url)
+                    if profile:
+                        px_first = profile.get("first_name", "")
+                        px_last = profile.get("last_name", "")
+                        if px_first:
+                            first_name = px_first
+                            last_name = px_last
+                            name = f"{px_first} {px_last}".strip()
+                        if profile.get("occupation"):
+                            title = profile.get("occupation", "")
+                
+                # Extract name from slug as fallback
+                if not name and linkedin_url and "linkedin.com/in/" in linkedin_url:
+                    slug = linkedin_url.split("linkedin.com/in/")[-1].strip("/").split("?")[0]
+                    slug_clean = re.sub(r'\d+$', '', slug)
+                    parts = slug_clean.replace("-", " ").split()
+                    if len(parts) >= 2 and len(parts[-1]) > 1:
+                        first_name = parts[0].capitalize()
+                        last_name = parts[-1].capitalize()
+                        name = f"{first_name} {last_name}"
+                
+                # Step 3 — Email via Hunter.io
+                domain = extract_domain(company_name, source_url)
+                email = ""
+                if name and " " in name:
+                    name_parts = name.split()
+                    first_name = name_parts[0]
+                    last_name = name_parts[-1]
+                elif name:
+                    first_name = name
+                    last_name = ""
+                
+                if first_name and domain:
+                    clean_last = last_name if len(last_name) > 1 else ""
+                    email = find_email_hunter(first_name, clean_last, domain)
+                
+                # Only add if we have at least LinkedIn URL or email
+                if linkedin_url or email:
+                    contact = Contact(
+                        id=str(uuid.uuid4()),
+                        user_id=user_id,
+                        company_id=company_id,
+                        name=name or "See LinkedIn",
+                        title=title or "See LinkedIn",
+                        email=email,
+                        linkedin_url=linkedin_url,
+                        source="tavily" if not PROXYCURL_API_KEY else "proxycurl",
+                    )
+                    contacts.append(contact)
+                    found_titles.add(contact.title or "")
+                    print(f"      ✅ Found: {name} — {title}")
+                    break  # Move to next target_title
+        
+        except Exception as e:
+            print(f"      ⚠️  Error searching for {target_title}: {e}")
+            continue
+    
+    if contacts:
+        print(f"    ✅ Found {len(contacts)} contacts at {company_name}")
+    else:
+        print(f"    ➖ No contacts found at {company_name}")
+    
+    return contacts
+
+
+# ---------------------------------------------------------------------------
 # MAIN NODE FUNCTION
 # ---------------------------------------------------------------------------
 
@@ -428,32 +581,32 @@ def contact_finder_agent(state: AgentState) -> dict:
     funded_companies = state.get("funded_companies", [])
     print(f"\n  Processing {len(funded_companies)} funded companies...")
 
-    for company in funded_companies[:10]:   # cap at 10 to manage API costs
-        contact = find_contact_for_company(
+    for company in funded_companies[:10]:
+        company_contacts = find_multiple_contacts_for_company(
             company_name=company["name"],
             source_url=company["source_url"],
             user_id=user_id,
             company_id=company["id"],
+            max_contacts=4,  # Find up to 4 people per company
         )
-        if contact:
-            contacts.append(contact)
+        contacts.extend(company_contacts)  # Add all found contacts
 
     # --- Source 2: Recommended scored jobs (warm outreach) ---
     scored_jobs = state.get("jobs_scored", [])
     recommended = [j for j in scored_jobs if j["recommended"]]
     print(f"\n  Processing {len(recommended)} recommended jobs...")
 
-    for scored_job in recommended[:5]:      # cap at 5
+    for scored_job in recommended[:5]:
         job = scored_job["job"]
-        contact = find_contact_for_company(
+        job_contacts = find_multiple_contacts_for_company(
             company_name=job["company"],
             source_url=job["url"],
             user_id=user_id,
-            company_id="",      # no company_id for job-sourced contacts
+            company_id="",
             job_id=job["id"],
+            max_contacts=3,  # Find up to 3 people per job posting
         )
-        if contact:
-            contacts.append(contact)
+        contacts.extend(job_contacts)  # Add all found contacts
 
     print(f"\n✅ ContactFinderAgent complete — {len(contacts)} contacts found")
 
