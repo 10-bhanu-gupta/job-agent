@@ -40,8 +40,8 @@ claude = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 # PROMPTS
 # ---------------------------------------------------------------------------
 
-COLD_OUTREACH_PROMPT = """You are helping Bhanu Gupta write a personalised cold outreach email
-and LinkedIn DM to a contact at a recently funded AI company.
+COLD_OUTREACH_PROMPT = """You are Nisha, Bhanu's AI agent. You're helping draft a personalised cold outreach email
+and LinkedIn DM to a contact at a company (that has been recently funded or has been in the news) on behalf of Bhanu Gupta.
 
 ## Bhanu's Resume
 {resume}
@@ -59,16 +59,24 @@ LinkedIn: {linkedin_url}
 Write a cold outreach email and a LinkedIn DM.
 
 The email should:
-- Open with ONE specific, genuine observation about the company
-  (their funding, their product, their mission — from the context above)
-- Briefly introduce Bhanu's relevant AI engineering background
-- Make a clear, specific ask (15-minute call, coffee chat, refer to open role)
-- Be warm but professional, not sycophantic
-- Be under 200 words total
+- START with a genuine congratulations about their recent growth / funding round news (include specific amount and date if available)
+- Then introduce yourself as Nisha, Bhanu Gupta's AI agent, and briefly explain: "I came across your company's recent (funding or growth) news and noticed [specific detail]"
+- Then tell them that the purpose of this email is that you feel that Bhanu would be great fit at their company.
+- Briefly tell them about Bhanu's 10 years of experince with consumer internet companies and how excited and passionate he is about AI-tech.
+- Highlight how Bhanu's AI engineering skills (LangGraph, RAG, agentic systems) could be valuable to their team, and them that he has created you - Nisha - as a part of his jobs-agent project that helps him find relevant jobs and reach out.
+- Also mention why his experience with data and decision sciences puts him in a unique & strong position when it comes to making and evaluating probabilistic systems.
+- Include Bhanu's contact information: phone +91-9663938263, email in signature
+- Mention that you've attached Bhanu's resume (PDF) for reference
+- Make a clear, specific ask - 15-minute call or refer to open role
+- Close with: "Feel free to reach out to Bhanu directly at +91-9663938263 or respond to this email."
+- Sign as: "Best, Nisha (on behalf of Bhanu Gupta) | AI Agent"
+- Keep it warm but professional, under 250 words
 
 The LinkedIn DM should:
 - Be under 280 characters
-- Lead with the specific company observation
+- Start with congratulations on their growth / funding news
+- Mention Bhanu's AI background
+- Include the phone number +91-9663938263
 - End with a clear ask
 
 Respond with ONLY a JSON object, no markdown, no preamble:
@@ -79,11 +87,14 @@ Respond with ONLY a JSON object, no markdown, no preamble:
 }}"""
 
 
-JOB_APPLICATION_PROMPT = """You are helping Bhanu Gupta write a personalised outreach email
-and LinkedIn DM to a hiring manager for a specific role he is applying to.
+JOB_APPLICATION_PROMPT = """You are Nisha, Bhanu's AI agent. You're helping draft a personalised outreach email
+and LinkedIn DM to a hiring manager for a specific role Bhanu is interested in applying to.
 
 ## Bhanu's Resume
 {resume}
+
+## Scoring Reasoning
+{scoring_reasoning}
 
 ## Job Details
 Title: {job_title}
@@ -98,18 +109,29 @@ Title: {contact_title}
 LinkedIn: {linkedin_url}
 
 ## Instructions
-Write an outreach email and LinkedIn DM from Bhanu to this hiring manager.
+Write an outreach email and LinkedIn DM. You are writing on behalf of Bhanu, signed as "Nisha - Bhanu's AI agent".
 
 The email should:
+
+- Introduce yourself as Nisha, Bhanu's AI agent: "I came across this job posting on {job_source} and I believe Bhanu would be a great fit for this role."
 - Reference the specific role by name
-- Highlight 2-3 of Bhanu's most relevant skills/experiences for THIS role
-- Mention one specific thing about the company that genuinely excites Bhanu
-- Make a clear ask (happy to share more, would love a chat)
-- Be under 200 words
+- Then tell them that the purpose of this email is that you feel that Bhanu would be great fit at their company. Use Claude's scoring reasoning to explain why Bhanu is a great match (highlight 2-3 key reasons from the reasoning).
+- Briefly tell them about Bhanu's 10 years of experince with consumer internet companies and how excited and passionate he is about AI-tech.
+- Highlight how Bhanu's has created you - Nisha - as a part of his jobs-agent project that helps him find relevant jobs and reach out.
+- Also mention why his experience with data and decision sciences puts him in a unique & strong position when it comes to making and evaluating probabilistic systems.
+- Mention Bhanu's relevant skills/experiences for THIS role
+- Include Bhanu's contact information: phone +91-9663938263
+- Mention that you've attached Bhanu's resume (PDF) for reference
+- Make a clear ask (would love to chat about the role, happy to discuss further)
+- Close with: "Feel free to reach out to Bhanu directly at +91-9663938263 or respond to this email."
+- Sign as: "Best, Nisha (on behalf of Bhanu Gupta) | AI Agent"
+- Keep it warm but professional, under 250 words
 
 The LinkedIn DM should:
 - Be under 280 characters
-- Reference the role and one relevant skill
+- Reference the specific role
+- Mention 1-2 relevant skills
+- Include phone number +91-9663938263
 - End with a clear ask
 
 Respond with ONLY a JSON object, no markdown, no preamble:
@@ -148,13 +170,14 @@ def draft_outreach(
     try:
         if scored_job:
             # Warm outreach — applying for a specific job
-            job = scored_job["job"]
             prompt = JOB_APPLICATION_PROMPT.format(
                 resume=RESUME_CONTENT,
                 job_title=job["title"],
                 company_name=job["company"],
                 job_url=job["url"],
                 job_description=job["description"][:1000],
+                scoring_reasoning=scored_job.get("reasoning", "N/A")[:500],  # Add this line
+                job_source=scored_job.get("job", {}).get("source", "HN"),  # Add this line
                 contact_name=contact_name,
                 contact_title=contact_title,
                 linkedin_url=contact["linkedin_url"],
