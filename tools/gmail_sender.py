@@ -39,6 +39,7 @@ from config.settings import (
     EMAIL_SEND_DELAY_MIN,
     EMAIL_SEND_DELAY_MAX,
     MAX_EMAILS_PER_DAY,
+    RESUME_PDF_PATH,
 )
 
 # ---------------------------------------------------------------------------
@@ -110,17 +111,25 @@ def build_message(
     subject: str,
     body: str,
     sender: str = None,
+    attachment_path: str = None,
 ) -> dict:
     """
-    Builds a Gmail API message object from email components.
+    Builds a Gmail API message object from email components, with optional attachment.
 
-    CONCEPT — MIME format
+    CONCEPT — MIME format with attachments
     Emails are sent in MIME format (Multipurpose Internet Mail Extensions).
-    MIMEMultipart allows both plain text and HTML versions.
-    We send plain text only — simpler, less likely to trigger spam filters,
-    and more personal-feeling for cold outreach.
+    MIMEMultipart allows plain text + attachments.
+    We attach the resume PDF in base64 format as required by Gmail API.
 
-    The message must be base64-encoded for the Gmail API.
+    Args:
+        to_email:         recipient email address
+        subject:          email subject
+        body:             plain text email body
+        sender:           sender email (defaults to SENDER_EMAIL)
+        attachment_path:  optional path to PDF file to attach (e.g., resume)
+
+    Returns:
+        dict with 'raw' key containing base64-encoded message for Gmail API
     """
     sender = sender or SENDER_EMAIL
 
@@ -133,6 +142,26 @@ def build_message(
     text_part = MIMEText(body, "plain")
     message.attach(text_part)
 
+    # Attach resume PDF if provided
+    if attachment_path and Path(attachment_path).exists():
+        try:
+            from email.mime.base import MIMEBase
+            from email import encoders
+            
+            with open(attachment_path, "rb") as attachment:
+                part = MIMEBase("application", "octet-stream")
+                part.set_payload(attachment.read())
+            
+            encoders.encode_base64(part)
+            part.add_header(
+                "Content-Disposition",
+                f"attachment; filename= {Path(attachment_path).name}",
+            )
+            message.attach(part)
+            print(f"    📎 Resume attached: {Path(attachment_path).name}")
+        except Exception as e:
+            print(f"    ⚠️  Failed to attach resume: {e}")
+    
     # Encode to base64 as required by Gmail API
     encoded = base64.urlsafe_b64encode(message.as_bytes()).decode()
     return {"raw": encoded}
@@ -148,6 +177,7 @@ def send_email(
     subject: str,
     body: str,
     dry_run: bool = False,
+    attachment_path: str = None,
 ) -> bool:
     """
     Sends a single email via Gmail API.
@@ -181,7 +211,7 @@ def send_email(
         return False
 
     try:
-        message = build_message(to_email, subject, body)
+        message = build_message(to_email, subject, body, attachment_path=attachment_path)
         service.users().messages().send(
             userId="me",
             body=message
@@ -272,6 +302,7 @@ def send_approved_emails(
             subject=draft["subject"],
             body=draft["body"],
             dry_run=dry_run,
+            attachment_path=RESUME_PDF_PATH,
         )
 
         if success:

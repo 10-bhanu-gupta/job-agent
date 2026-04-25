@@ -71,6 +71,11 @@ IS_PRODUCTION = APP_ENV == "production"
 # Edit these to broaden or narrow your job search
 JOB_SEARCH_KEYWORDS = [
     "AI Engineer",
+    "Artificial Intelligence Engineer",
+    "AI Researcher",
+    "AI Research Engineer",
+    "Artificial Intelligence Researcher",
+    "Artificial Intelligence Research Engineer",
     "LLM Engineer",
     "Agentic AI Engineer",
     "GenAI Engineer",
@@ -116,6 +121,8 @@ EMAIL_SEND_DELAY_MAX = 300   # 5 minutes
 # Path to your resume — used by ScoringAgent to score jobs
 RESUME_PATH = "config/resume.md"
 
+# Path to your resume (PDF) — attached to outreach emails
+RESUME_PDF_PATH = "config/resume.pdf"
 
 # ---------------------------------------------------------------------------
 # HELPER
