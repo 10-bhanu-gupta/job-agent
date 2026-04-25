@@ -440,10 +440,6 @@ def find_multiple_contacts_for_company(
         if any(target_title.lower() in title.lower() for title in found_titles):
             continue
         
-        # Also check if we already have this LinkedIn URL
-        if any(url == c.linkedin_url for c in contacts):
-            continue
-        
         query = f'"{company_name}" {target_title} site:linkedin.com/in'
         try:
             response = tavily.search(
