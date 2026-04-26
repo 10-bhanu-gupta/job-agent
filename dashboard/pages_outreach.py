@@ -86,22 +86,21 @@ def load_funded_companies():
 
 @st.cache_data(ttl=30)
 def load_contacts_for_job(job_id: str):
-    """Load all contacts associated with a job posting."""
+    """Load all contacts and draft associated with a job posting."""
     with get_db() as db:
-        # Find outreach drafts for this job
-        drafts = db.query(OutreachRecord).filter(
-            OutreachRecord.job_id == job_id
-        ).all()
+        # Find outreach draft for this job
+        draft = db.query(OutreachRecord).filter(
+            OutreachRecord.job_id == job_id,
+            OutreachRecord.status.in_(["pending_approval", "approved", "rejected"])
+        ).first()
         
         # Extract contact IDs from contact_ids JSON array
         contact_ids = set()
-        for draft in drafts:
-            if draft.contact_ids:
-                try:
-                    ids = json.loads(draft.contact_ids)
-                    contact_ids.update(ids)
-                except json.JSONDecodeError:
-                    pass
+        if draft and draft.contact_ids:
+            try:
+                contact_ids = set(json.loads(draft.contact_ids))
+            except json.JSONDecodeError:
+                pass
         
         # Fetch contact details
         contacts = {}
@@ -119,39 +118,39 @@ def load_contacts_for_job(job_id: str):
                 for c in contact_records
             }
         
-        # Get the first draft for this job (they all have same email/dm template)
-        draft = drafts[0] if drafts else None
-        
-        return {
-            "contacts": contacts,
-            "draft": {
-                "id": draft.id,
-                "email_subject": draft.email_subject,
-                "email_body": draft.email_body,
-                "linkedin_dm": draft.linkedin_dm,
-                "status": draft.status,
-            } if draft else None,
-        }
+        # Return draft and contacts
+        if draft:
+            return {
+                "contacts": contacts,
+                "draft": {
+                    "id": draft.id,
+                    "email_subject": draft.email_subject,
+                    "email_body": draft.email_body,
+                    "linkedin_dm": draft.linkedin_dm,
+                    "status": draft.status,
+                },
+            }
+        else:
+            return {"contacts": {}, "draft": None}
 
 
 @st.cache_data(ttl=30)
 def load_contacts_for_company(company_id: str):
-    """Load all contacts associated with a company."""
+    """Load all contacts and draft associated with a company."""
     with get_db() as db:
-        # Find outreach drafts for this company
-        drafts = db.query(OutreachRecord).filter(
-            OutreachRecord.company_id == company_id
-        ).all()
+        # Find outreach draft for this company
+        draft = db.query(OutreachRecord).filter(
+            OutreachRecord.company_id == company_id,
+            OutreachRecord.status.in_(["pending_approval", "approved", "rejected"])
+        ).first()
         
         # Extract contact IDs from contact_ids JSON array
         contact_ids = set()
-        for draft in drafts:
-            if draft.contact_ids:
-                try:
-                    ids = json.loads(draft.contact_ids)
-                    contact_ids.update(ids)
-                except json.JSONDecodeError:
-                    pass
+        if draft and draft.contact_ids:
+            try:
+                contact_ids = set(json.loads(draft.contact_ids))
+            except json.JSONDecodeError:
+                pass
         
         # Fetch contact details
         contacts = {}
@@ -169,19 +168,20 @@ def load_contacts_for_company(company_id: str):
                 for c in contact_records
             }
         
-        # Get the first draft for this company
-        draft = drafts[0] if drafts else None
-        
-        return {
-            "contacts": contacts,
-            "draft": {
-                "id": draft.id,
-                "email_subject": draft.email_subject,
-                "email_body": draft.email_body,
-                "linkedin_dm": draft.linkedin_dm,
-                "status": draft.status,
-            } if draft else None,
-        }
+        # Return draft and contacts
+        if draft:
+            return {
+                "contacts": contacts,
+                "draft": {
+                    "id": draft.id,
+                    "email_subject": draft.email_subject,
+                    "email_body": draft.email_body,
+                    "linkedin_dm": draft.linkedin_dm,
+                    "status": draft.status,
+                },
+            }
+        else:
+            return {"contacts": {}, "draft": None}
 
 
 # ---------------------------------------------------------------------------
