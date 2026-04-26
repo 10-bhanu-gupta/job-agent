@@ -213,6 +213,7 @@ def draft_outreach(
             user_id=contact["user_id"],
             contact_id=contact["id"],
             job_id=scored_job["job"]["id"] if scored_job else "",
+            company_id=contact.get("company_id", ""),
             email_subject=result.get("email_subject", ""),
             email_body=result.get("email_body", ""),
             linkedin_dm=result.get("linkedin_dm", ""),
@@ -295,6 +296,11 @@ def outreach_agent(state: AgentState) -> dict:
         )
 
         if draft:
+            # Set job_id if this is job application outreach
+            draft["job_id"] = scored_job["job"]["id"] if scored_job else ""
+            # Set company_id from contact (already has it)
+            # Note: contact.company_id is set by ContactFinderAgent
+            
             drafts.append(draft)
             print(f"    ✅ Draft created — subject: {draft['email_subject']}")
 

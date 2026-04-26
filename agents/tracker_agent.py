@@ -127,6 +127,7 @@ def upsert_outreach(db, draft: dict, is_approved: bool) -> None:
         user_id=draft["user_id"],
         contact_id=draft["contact_id"] or None,
         job_id=draft["job_id"] or None,
+        company_id=draft.get("company_id") or None,  # ADD THIS LINE
         email_subject=draft["email_subject"],
         email_body=draft["email_body"],
         linkedin_dm=draft["linkedin_dm"],
@@ -210,6 +211,7 @@ def pre_interrupt_tracker(state: AgentState) -> dict:
                     user_id=draft["user_id"],
                     contact_id=draft["contact_id"] or None,
                     job_id=draft["job_id"] or None,
+                    company_id=draft.get("company_id") or None,  # ADD THIS LINE
                     email_subject=draft["email_subject"],
                     email_body=draft["email_body"],
                     linkedin_dm=draft["linkedin_dm"],
